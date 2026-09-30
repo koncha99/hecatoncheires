@@ -713,6 +713,7 @@ export const msgKeys = {
   // Case reference field
   placeholderSelectCaseRef: 'placeholderSelectCaseRef',
   caseRefUnavailable: 'caseRefUnavailable',
+  fieldValueUnresolved: 'fieldValueUnresolved',
 
   // Home page
   sectionA: 'sectionA',
