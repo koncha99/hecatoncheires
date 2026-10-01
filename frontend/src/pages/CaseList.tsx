@@ -112,6 +112,7 @@ interface FieldDef {
   name: string
   type: string
   options?: FieldOption[] | null
+  referenceWorkspaceId?: string | null
 }
 interface CaseUser {
   id: string
@@ -1136,7 +1137,7 @@ export default function CaseList() {
             testId="status-filter"
           />
         )}
-        <CaseFieldFilters fields={fieldDefs} {...fieldFilter} />
+        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} {...fieldFilter} />
         <MultiSelectFilter
           label={t('filterAssignee')}
           options={assigneeOptions}

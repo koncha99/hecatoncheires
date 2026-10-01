@@ -32,8 +32,10 @@ export default function DateField({
         id={fieldId}
         type="date"
         className={`${styles.input} ${error ? styles.inputError : ''}`}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        // The date control uses YYYY-MM-DD, while the field validator and
+        // storage use RFC3339. Preserve the selected calendar day in UTC.
+        value={value.slice(0, 10)}
+        onChange={(e) => onChange(e.target.value ? `${e.target.value}T00:00:00Z` : '')}
         disabled={disabled}
       />
       {error && <span className={styles.error}>{error}</span>}

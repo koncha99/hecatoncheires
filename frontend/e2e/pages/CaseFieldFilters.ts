@@ -1,6 +1,6 @@
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
-/** Shared field-filter toolbar on the Case list and either board. */
+/** Shared condition composer on the Case list and either board. */
 export class CaseFieldFilters {
   constructor(private readonly page: Page) {}
 
@@ -10,13 +10,37 @@ export class CaseFieldFilters {
     }
   }
 
-  async toggleOption(fieldId: string, optionName: string): Promise<void> {
+  async addCondition(fieldId: string, fieldName: string): Promise<void> {
     await this.open();
-    const field = this.page.getByTestId(`case-field-filter-${fieldId}`);
-    if (!await field.getByRole('listbox').isVisible()) {
-      await field.locator('button').first().click();
+    if (!await this.page.getByTestId(`case-field-filter-${fieldId}`).isVisible()) {
+      await this.page.getByRole('combobox', { name: 'Add condition', exact: true }).click();
+      await this.page.getByRole('option', { name: fieldName, exact: true }).click();
     }
-    await field.getByRole('listbox').getByRole('button', { name: new RegExp(optionName) }).click();
+  }
+
+  async toggleOption(fieldId: string, optionName: string, fieldName?: string): Promise<void> {
+    const name = fieldName ?? fieldId.split('_').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    await this.addCondition(fieldId, name);
+    const field = this.page.getByTestId(`case-field-filter-${fieldId}`);
+    const remove = field.getByRole('button', { name: `Remove ${optionName}`, exact: true });
+    if (await remove.isVisible()) {
+      await remove.click();
+      return;
+    }
+    await field.getByRole('combobox').click();
+    await this.page.getByRole('option', { name: optionName, exact: true }).click();
+  }
+
+  async addValue(fieldId: string, fieldName: string, value: string): Promise<void> {
+    await this.addCondition(fieldId, fieldName);
+    const field = this.page.getByTestId(`case-field-filter-${fieldId}`);
+    await field.getByLabel(fieldName, { exact: true }).fill(value);
+    await field.getByRole('button', { name: 'Add', exact: true }).click();
+  }
+
+  async close(): Promise<void> {
+    await this.page.getByTestId('case-field-filters-button').click();
+    await expect(this.page.getByTestId('case-field-filters-panel')).toBeHidden();
   }
 
   async clear(): Promise<void> {

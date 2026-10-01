@@ -262,7 +262,7 @@ export default function ActionList() {
           extraOption={extraOption}
           testId="action-case-filter"
         />
-        <CaseFieldFilters fields={fieldDefs} {...fieldFilter} />
+        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} {...fieldFilter} />
         <div className="h-search" style={{ width: 280, marginLeft: 0 }}>
           <IconSearch size={13} />
           <input

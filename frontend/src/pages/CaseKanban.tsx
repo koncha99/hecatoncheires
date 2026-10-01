@@ -133,7 +133,7 @@ export default function CaseKanban() {
             }}
           />
         </div>
-        <CaseFieldFilters fields={fieldDefs} {...fieldFilter} />
+        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} {...fieldFilter} />
         {search && (
           <Button size="sm" variant="ghost" onClick={() => setSearch('')} data-testid="case-board-filter-clear">
             {t('btnClear')}

@@ -941,9 +941,9 @@ test('shares category filters, combines fields and restores them from case detai
   const filters = new CaseFieldFilters(page);
   const prefix = `Field filter ${Date.now()}`;
   await list.navigate('test');
-  for (const [category, priority] of [['bug', 'high'], ['bug', 'low'], ['feature', 'high']]) {
+  for (const [category, priority] of [['bug', 'high'], ['bug', 'low'], ['feature', 'high'], ['feature', 'low'], ['task', 'medium']]) {
     await list.clickNewCaseButton();
-    await form.createCase({ title: `${prefix} ${category} ${priority}`, customFields: { category, priority } });
+    await form.createCase({ title: `${prefix} ${category} ${priority}`, customFields: { category, priority, description: `${prefix} ${priority}` } });
   }
   await filters.toggleOption('category', 'Bug');
   await filters.toggleOption('priority', 'High');
@@ -961,6 +961,33 @@ test('shares category filters, combines fields and restores them from case detai
   await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toHaveCount(0);
   await filters.toggleOption('category', 'Feature');
   await expect(list.getCaseRowByTitle(`${prefix} feature high`)).toBeVisible();
+  await filters.toggleOption('priority', 'Low');
+  await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toBeVisible();
+  await expect(list.getCaseRowByTitle(`${prefix} feature low`)).toBeVisible();
+  await expect(list.getCaseRowByTitle(`${prefix} task medium`)).toHaveCount(0);
+  await filters.addValue('description', 'Description', 'no matching value');
+  await expect(list.getCaseRowByTitle(`${prefix} bug high`)).toHaveCount(0);
+  await filters.addValue('description', 'Description', `${prefix} high`);
+  await expect(list.getCaseRowByTitle(`${prefix} bug high`)).toBeVisible();
+  await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toHaveCount(0);
+  await filters.addValue('description', 'Description', `${prefix} low`);
+  await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toBeVisible();
+  await filters.close();
+  const summary = page.getByTestId('case-field-filters-summary');
+  await summary.getByRole('button', { name: 'Remove no matching value from Description', exact: true }).click();
+  const compoundUrl = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(compoundUrl);
+  await expect(summary).toContainText('Bug');
+  await expect(summary).toContainText('Feature');
+  await expect(summary).toContainText('High');
+  await expect(summary).toContainText('Low');
+  await expect(list.getCaseRowByTitle(`${prefix} feature low`)).toBeVisible();
+  await summary.getByRole('button', { name: 'Remove Low from Priority', exact: true }).click();
+  await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toHaveCount(0);
+  await expect(page).not.toHaveURL(/field.priority=low/);
+  await summary.getByRole('button', { name: 'Remove Priority condition', exact: true }).click();
+  await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toBeVisible();
   await filters.clear();
   await list.fillSearchFilter(prefix);
   await expect(list.getCaseRowByTitle(`${prefix} bug low`)).toBeVisible();

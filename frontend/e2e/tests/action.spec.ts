@@ -340,10 +340,10 @@ test('Action board filters on parent Case fields and keeps the filter around its
   const actionForm = new ActionFormPage(page);
   const filters = new CaseFieldFilters(page);
   const prefix = `Action fields ${uniq()}`;
-  for (const category of ['bug', 'feature']) {
+  for (const [category, priority] of [['bug', 'high'], ['feature', 'low'], ['task', 'medium']]) {
     await list.navigate('test');
     await list.clickNewCaseButton();
-    await form.createCase({ title: `${prefix} ${category}`, customFields: { category } });
+    await form.createCase({ title: `${prefix} ${category}`, customFields: { category, priority } });
     await board.navigate('test');
     await board.clickNewActionButton();
     await actionForm.createAction({ title: `${prefix} action ${category}`, caseTitle: `${prefix} ${category}` });
@@ -360,6 +360,18 @@ test('Action board filters on parent Case fields and keeps the filter around its
   await expect(page).toHaveURL(/actions\/\d+\?field.category=bug/);
   await page.getByTestId('modal-close-button').click();
   await expect(page).toHaveURL(/actions\?field.category=bug/);
-  await filters.clear();
+  await filters.toggleOption('category', 'Feature');
+  await filters.toggleOption('priority', 'High');
+  await expect(excluded).toHaveCount(0);
+  await filters.toggleOption('priority', 'Low');
   await expect(excluded).toBeVisible();
+  const medium = page.getByTestId('action-card').filter({ hasText: `${prefix} action task` });
+  await expect(medium).toHaveCount(0);
+  await filters.close();
+  await page.reload();
+  await expect(selected).toBeVisible();
+  await expect(excluded).toBeVisible();
+  await expect(medium).toHaveCount(0);
+  await filters.clear();
+  await expect(medium).toBeVisible();
 });

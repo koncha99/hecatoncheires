@@ -13,26 +13,24 @@ interface Props {
   value: string[]
   onChange: (next: string[]) => void
   testId?: string
-  // Keep an in-flow choice list expanded until its trigger is toggled.
-  inline?: boolean
 }
 
 // Ghost-style dropdown rendered as `Label value ▼`.
 // Multi-select via checkbox list inside a popover. No bordered control.
 export default function FilterDropdown({
-  label, allLabel, options, value, onChange, testId, inline = false,
+  label, allLabel, options, value, onChange, testId,
 }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!open || inline) return
+    if (!open) return
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
-  }, [open, inline])
+  }, [open])
 
   const valueLabel = value.length === 0
     ? allLabel

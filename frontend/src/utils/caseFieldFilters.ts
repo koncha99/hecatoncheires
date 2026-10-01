@@ -3,6 +3,7 @@ export interface CaseFieldDefinition {
   name: string
   type: string
   options?: { id: string; name: string }[] | null
+  referenceWorkspaceId?: string | null
 }
 
 export interface CaseWithFields {

@@ -27,10 +27,15 @@ The column picker's selection is also stored in your browser, per workspace, bec
 
 ## Case field filters (Web UI)
 
-The Case list and both boards have a **Case fields** control. Pick configured
-options for select / multi-select fields (for example, your team's categories),
-or enter an exact value for another field. Within one field, multiple values
-match **any** selection (OR); different fields must **all** match (AND). A
+The Case list and both boards have a **Case fields** control. Use **Add condition**
+to choose just the fields you need. Search and select multiple configured options
+(for example, your team's categories), users by name, or reference Cases by title.
+For text, number and date fields, enter each exact value and press **Add** or Enter
+to append it without replacing existing values. Active conditions and removable
+value chips stay visible below the toolbar when the editor is closed. Remove a
+single value, remove a whole condition, or clear all field filters.
+
+Within one field, multiple values match **any** selection (OR); different fields must **all** match (AND). A
 multi-value field matches when any of its values is selected. Title search and
 the existing filters narrow the result further. The list applies field filters
 before pagination and the boards apply them before grouping cards into columns.
@@ -46,6 +51,7 @@ The Case detail **Back** button also restores the originating list's fields.
 | --- | --- |
 | One category, open Cases | `/ws/support/cases?field.category=it` |
 | Either category | `/ws/support/cases?field.category=it&field.category=sales` |
+| Either category and either priority | `/ws/support/cases?field.category=it&field.category=sales&field.priority=high&field.priority=urgent` |
 | Category and priority, closed Cases | `/ws/support/cases?status=closed&field.category=it&field.priority=high` |
 | The same category on a board | `/ws/support/actions?field.category=it` |
 
