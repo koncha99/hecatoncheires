@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clearCaseFieldFilters, matchesCaseFields, readCaseFieldFilters, writeCaseFieldFilter } from './caseFieldFilters'
+import { collectCaseReferenceValues, clearCaseFieldFilters, matchesCaseFields, readCaseFieldFilters, writeCaseFieldFilter } from './caseFieldFilters'
 
 const defs = [
   { id: 'category', name: 'Category', type: 'SELECT', options: [{ id: 'it', name: 'IT' }, { id: 'sales', name: 'Sales' }] },
@@ -54,5 +54,35 @@ describe('case field filters', () => {
     expect(matchesCaseFields({ ...row('category', 'it'), accessDenied: true }, filters('field.category=it'), defs)).toBe(false)
     expect(matchesCaseFields({ accessDenied: true }, filters(''), defs)).toBe(true)
     expect(matchesCaseFields(undefined, filters('field.category=it'), defs)).toBe(false)
+  })
+})
+
+
+describe('reference filter candidates', () => {
+  it('collects distinct scalar and array references from accessible, unfiltered rows only', () => {
+    const definitions = [
+      { id: 'ref', name: 'Ref', type: 'CASE_REF' },
+      { id: 'refs', name: 'Refs', type: 'MULTI_CASE_REF' },
+      { id: 'text', name: 'Text', type: 'TEXT' },
+    ]
+    expect([...collectCaseReferenceValues([
+      { fields: [{ fieldId: 'ref', value: '42' }, { fieldId: 'refs', value: ['99', '42'] }, { fieldId: 'text', value: '123' }] },
+      { fields: [{ fieldId: 'ref', value: 42 }, { fieldId: 'refs', value: ['99', null, ''] }] },
+      { accessDenied: true, fields: [{ fieldId: 'ref', value: '100' }] },
+      null, { fields: null },
+    ], definitions)]).toEqual([['ref', ['42']], ['refs', ['99', '42']]])
+  })
+})
+
+describe('option ID precedence', () => {
+  it.each(['SELECT', 'MULTI_SELECT'])('does not mistake a stored %s ID for another option label', (type) => {
+    const definitions = [{ id: 'team', name: 'Team', type, options: [
+      { id: 'a', name: 'b' }, { id: 'b', name: 'B team' }, { id: 'c', name: 'Legacy team' },
+    ] }]
+    const selected = new Map([['team', ['a']]])
+    const value = type === 'MULTI_SELECT' ? ['b'] : 'b'
+    expect(matchesCaseFields(row('team', value), selected, definitions)).toBe(false)
+    expect(matchesCaseFields(row('team', value), new Map([['team', ['b']]]), definitions)).toBe(true)
+    expect(matchesCaseFields(row('team', type === 'MULTI_SELECT' ? ['Legacy team'] : 'Legacy team'), new Map([['team', ['c']]]), definitions)).toBe(true)
   })
 })

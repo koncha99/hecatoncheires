@@ -1,3 +1,5 @@
+import { calendarDate } from './calendarDate'
+
 export interface CaseFieldDefinition {
   id: string
   name: string
@@ -68,16 +70,44 @@ export function matchesCaseFields(
       if (value == null || value === '') return false
       if (def.type === 'SELECT' || def.type === 'MULTI_SELECT') {
         const option = def.options?.find((o) => o.id === filterValue)
-        return Boolean(option && (value === option.id || value === option.name))
+        // A configured ID wins over a colliding legacy display name.
+        const stored = def.options?.find((o) => o.id === value)
+        return Boolean(option && (stored ? stored.id === option.id : value === option.name))
       }
       if (def.type === 'NUMBER') {
         return filterValue.trim() !== '' && Number.isFinite(Number(filterValue))
           && Number(value) === Number(filterValue)
       }
-      if (def.type === 'DATE') return String(value).slice(0, 10) === filterValue
+      if (def.type === 'DATE') return calendarDate(value) === filterValue
       return String(value) === filterValue
     }))
     if (!hit) return false
   }
   return true
+}
+
+
+// Offer references present in the unfiltered result set, including archived
+// targets. Resolve their labels with the access-controlled ID resolver; the
+// creation picker's candidate search intentionally excludes archived targets.
+export function collectCaseReferenceValues(
+  cases: readonly (CaseWithFields | null | undefined)[],
+  definitions: readonly CaseFieldDefinition[],
+): ReadonlyMap<string, readonly string[]> {
+  const referenceFields = new Set(definitions.filter((f) => f.type === 'CASE_REF' || f.type === 'MULTI_CASE_REF').map((f) => f.id))
+  const result = new Map<string, string[]>()
+  for (const c of cases) {
+    if (!c || c.accessDenied) continue
+    for (const field of c.fields ?? []) {
+      if (!referenceFields.has(field.fieldId)) continue
+      const values = result.get(field.fieldId) ?? []
+      for (const value of Array.isArray(field.value) ? field.value : [field.value]) {
+        if (value == null || value === '') continue
+        const id = String(value)
+        if (!values.includes(id)) values.push(id)
+      }
+      result.set(field.fieldId, values)
+    }
+  }
+  return result
 }

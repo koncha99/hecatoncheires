@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import Select from 'react-select'
 import { useTranslation } from '../i18n'
-import type { CaseFieldDefinition, CaseFieldFilterValues } from '../utils/caseFieldFilters'
+import { collectCaseReferenceValues, type CaseFieldDefinition, type CaseFieldFilterValues, type CaseWithFields } from '../utils/caseFieldFilters'
 import Button from './Button'
 import CaseFieldFilterValue from './CaseFieldFilterValue'
 import { buildSelectStyles, portalProps } from './selectStyles'
@@ -9,13 +9,15 @@ import styles from './CaseFieldFilters.module.css'
 
 interface Props {
   fields: readonly CaseFieldDefinition[]
+  cases?: readonly (CaseWithFields | null | undefined)[]
   filters: CaseFieldFilterValues
   onChange: (id: string, values: readonly string[]) => void
   onClear: () => void
 }
 
-export default function CaseFieldFilters({ fields, filters, onChange, onClear }: Props) {
+export default function CaseFieldFilters({ fields, cases, filters, onChange, onClear }: Props) {
   const { t } = useTranslation()
+  const referenceValues = useMemo(() => collectCaseReferenceValues(cases ?? [], fields), [cases, fields])
   const [open, setOpen] = useState(false)
   const [panelLeft, setPanelLeft] = useState(0)
   // An added condition may be empty while its values are being entered. Only
@@ -81,7 +83,7 @@ export default function CaseFieldFilters({ fields, filters, onChange, onClear }:
                       ×
                     </Button>
                   </div>
-                  <CaseFieldFilterValue field={field} values={filters.get(id) ?? []} onChange={(values) => onChange(id, values)} menuTarget={menuTarget} />
+                  <CaseFieldFilterValue field={field} values={filters.get(id) ?? []} onChange={(values) => onChange(id, values)} menuTarget={menuTarget} referenceValues={referenceValues.get(id)} />
                 </div>
               )
             })}

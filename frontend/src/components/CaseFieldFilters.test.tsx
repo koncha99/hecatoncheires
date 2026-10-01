@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
+import { MockedProvider } from '@apollo/client/testing'
+import { CASE_REFS_BY_IDS } from '../graphql/caseRef'
 import { I18nProvider } from '../i18n'
 import CaseFieldFilters from './CaseFieldFilters'
 
@@ -115,4 +117,28 @@ describe('CaseFieldFilters', () => {
     fireEvent.mouseDown(document.body)
     expect(screen.queryByTestId('case-field-filters-panel')).toBeNull()
   })
+})
+
+
+it('offers references from the entire result set even while other filters hide their source cases', async () => {
+  const onChange = vi.fn()
+  render(<MockedProvider addTypename={false} mocks={[{
+    request: { query: CASE_REFS_BY_IDS, variables: { workspaceId: 'support', ids: [42, 99] } },
+    result: { data: { caseRefsByIds: [
+      { id: 42, title: 'Active target', status: 'OPEN', workspaceId: 'support' },
+      { id: 99, title: 'Archived target', status: 'CLOSED', workspaceId: 'support' },
+    ] } },
+  }]}><I18nProvider defaultLang="en"><CaseFieldFilters
+    fields={[...fields, { id: 'related', name: 'Related', type: 'CASE_REF', referenceWorkspaceId: 'support' }]}
+    cases={[
+      { fields: [{ fieldId: 'category', value: 'it' }, { fieldId: 'related', value: '42' }] },
+      { fields: [{ fieldId: 'category', value: 'sales' }, { fieldId: 'related', value: '99' }] },
+    ]}
+    filters={new Map([['category', ['it']]])} onChange={onChange} onClear={vi.fn()}
+  /></I18nProvider></MockedProvider>)
+  fireEvent.click(screen.getByTestId('case-field-filters-button'))
+  addCondition('Related')
+  fireEvent.change(screen.getByRole('combobox', { name: 'Related' }), { target: { value: 'archived' } })
+  fireEvent.click(await screen.findByRole('option', { name: 'Archived target (#99)' }))
+  expect(onChange).toHaveBeenCalledWith('related', ['99'])
 })

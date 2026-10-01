@@ -1,3 +1,4 @@
+import { formatCalendarDate } from '../utils/calendarDate'
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -195,7 +196,7 @@ function renderFieldValue(value: any, def: FieldDef): React.ReactNode {
   if (isBlankFieldValue(value)) return <span className="soft">—</span>
   switch (def.type) {
     case 'SELECT': {
-      const opt = def.options?.find((o) => o.id === value || o.name === value)
+      const opt = def.options?.find((o) => o.id === value) ?? def.options?.find((o) => o.name === value)
       const text = opt?.name ?? String(value)
       return <span className="badge">{text}</span>
     }
@@ -204,14 +205,14 @@ function renderFieldValue(value: any, def: FieldDef): React.ReactNode {
       return (
         <div className="row" style={{ gap: 4, flexWrap: 'wrap' }}>
           {arr.map((v) => {
-            const opt = def.options?.find((o) => o.id === v || o.name === v)
+            const opt = def.options?.find((o) => o.id === v) ?? def.options?.find((o) => o.name === v)
             return <span key={String(v)} className="chip" style={{ height: 20, fontSize: 11 }}>{opt?.name ?? String(v)}</span>
           })}
         </div>
       )
     }
     case 'DATE': {
-      try { return <span className="mono soft" style={{ fontSize: 12 }}>{new Date(value).toLocaleDateString()}</span> } catch { return String(value) }
+      return <span className="mono soft" style={{ fontSize: 12 }}>{formatCalendarDate(value)}</span>
     }
     case 'NUMBER':
       return <span className="mono">{String(value)}</span>
@@ -1137,7 +1138,7 @@ export default function CaseList() {
             testId="status-filter"
           />
         )}
-        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} {...fieldFilter} />
+        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} cases={cases} {...fieldFilter} />
         <MultiSelectFilter
           label={t('filterAssignee')}
           options={assigneeOptions}

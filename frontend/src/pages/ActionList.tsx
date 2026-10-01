@@ -133,6 +133,8 @@ export default function ActionList() {
     return openData?.openCaseActions || []
   }, [filterCaseId, byCaseData, openData])
 
+  const filterCases = useMemo(() => actions.map((a) => a.case), [actions])
+
   const openCases = useMemo(
     () =>
       (casesData?.cases ?? []).map((c: { id: number; title: string }) => ({
@@ -262,7 +264,7 @@ export default function ActionList() {
           extraOption={extraOption}
           testId="action-case-filter"
         />
-        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} {...fieldFilter} />
+        <CaseFieldFilters key={currentWorkspace?.id} fields={fieldDefs} cases={filterCases} {...fieldFilter} />
         <div className="h-search" style={{ width: 280, marginLeft: 0 }}>
           <IconSearch size={13} />
           <input

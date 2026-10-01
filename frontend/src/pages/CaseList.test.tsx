@@ -1329,3 +1329,18 @@ describe('CaseList field filters', () => {
     expect(probeRef.path).toBe('/ws/risk/cases?custom=keep')
   })
 })
+
+
+it('renders the stored calendar day and resolves option IDs before legacy labels', async () => {
+  localStorage.setItem('caseListColumns:risk', JSON.stringify(['field:due', 'field:team']))
+  const definitions = [
+    { id: 'due', name: 'Due', type: 'DATE', options: null },
+    { id: 'team', name: 'Team', type: 'SELECT', options: [{ id: 'a', name: 'b' }, { id: 'b', name: 'B team' }] },
+  ]
+  renderAt('/ws/risk/cases?field.team=b&field.due=2026-10-01', [{ ...caseRow(61, 'Calendar case', 'OPEN'), fields: [
+    { fieldId: 'team', value: 'b', display: null }, { fieldId: 'due', value: '2026-10-01T00:00:00+09:00', display: null },
+  ] }], definitions)
+  const row = (await screen.findByText('Calendar case')).closest('tr')!
+  expect(row).toHaveTextContent('B team')
+  expect(row).toHaveTextContent(new Date('2026-10-01T00:00:00Z').toLocaleDateString(undefined, { timeZone: 'UTC' }))
+})

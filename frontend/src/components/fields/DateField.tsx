@@ -1,3 +1,4 @@
+import { calendarDate } from '../../utils/calendarDate'
 import styles from './FieldComponents.module.css'
 
 interface DateFieldProps {
@@ -34,7 +35,7 @@ export default function DateField({
         className={`${styles.input} ${error ? styles.inputError : ''}`}
         // The date control uses YYYY-MM-DD, while the field validator and
         // storage use RFC3339. Preserve the selected calendar day in UTC.
-        value={value.slice(0, 10)}
+        value={calendarDate(value)}
         onChange={(e) => onChange(e.target.value ? `${e.target.value}T00:00:00Z` : '')}
         disabled={disabled}
       />

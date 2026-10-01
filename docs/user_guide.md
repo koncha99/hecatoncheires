@@ -59,7 +59,8 @@ Use `field.<field-id>=<value>` and repeat the parameter for additional values;
 values are not split on commas. Use stable field / option **IDs**, not display
 names, and percent-encode special characters in keys and values. Number fields
 compare numerically, date fields compare `YYYY-MM-DD`, and text / Markdown / URL
-fields compare exact, case-sensitive strings. User fields use Slack user IDs;
+fields compare exact, case-sensitive strings. Dates use the stored calendar day
+in inputs, displays and filters, regardless of the viewer's timezone. User fields use Slack user IDs;
 Case reference fields use the stored reference ID. Multi-user and multi-case
 reference fields support repeated parameters too. An empty value removes that
 condition; filtering specifically for an unset field is not supported.
@@ -70,6 +71,12 @@ showing the whole workspace. Restricted private Cases cannot match a field
 filter. Filters narrow the Web UI's existing access-controlled results; they do
 not change permissions or the GraphQL API, and they do not persist workspace
 configuration or database state.
+
+Reference filter choices come from references already present in the current
+unfiltered tab or board. Search them by title or ID; readable archived targets
+remain selectable. Missing or inaccessible targets are omitted from choices,
+while a selected URL value remains removable. Creating or editing a reference
+continues to use the separate picker that excludes archived targets.
 
 ## Archiving a Case
 
