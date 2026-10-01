@@ -1,3 +1,4 @@
+import { CaseFieldFilters } from '../pages/CaseFieldFilters';
 import { test, expect } from '@playwright/test';
 import { CaseKanbanPage } from '../pages/CaseKanbanPage';
 import { ActionListPage } from '../pages/ActionListPage';
@@ -156,4 +157,36 @@ test.describe('Thread-mode Case board', () => {
     expect(await caseList.getCaseRowCellTextByHeader('Lifecycle Status Row', 'Status')).toBe('Open');
     await expect(page.getByTestId('board-status-badge')).toHaveCount(0);
   });
+});
+
+test('Case board uses the same field-filter links as the list', async ({ page }) => {
+  const list = new CaseListPage(page);
+  const form = new CaseFormPage(page);
+  const filters = new CaseFieldFilters(page);
+  const prefix = `Board fields ${Date.now()}`;
+  await list.navigate(THREAD_WS);
+  for (const reviewType of ['code', 'design']) {
+    await list.clickNewCaseButton();
+    await form.createCase({ title: `${prefix} ${reviewType}`, customFields: { review_type: reviewType } });
+    await list.fillSearchFilter(`${prefix} ${reviewType}`);
+    await list.clickCaseByTitle(`${prefix} ${reviewType}`);
+    // Without Slack, a newly created case needs an explicit board status.
+    await page.getByTestId('aside-board-status').selectOption('in_review');
+    await list.navigate(THREAD_WS);
+  }
+  await page.goto(`/ws/${THREAD_WS}/actions?field.review_type=code`);
+  const cards = page.getByTestId('case-card');
+  await expect(cards.filter({ hasText: `${prefix} code` })).toBeVisible();
+  await expect(cards.filter({ hasText: `${prefix} design` })).toHaveCount(0);
+  await page.reload();
+  await expect(cards.filter({ hasText: `${prefix} code` })).toBeVisible();
+  await expect(cards.filter({ hasText: `${prefix} design` })).toHaveCount(0);
+  await filters.toggleOption('review_type', 'Design');
+  await expect(cards.filter({ hasText: `${prefix} design` })).toBeVisible();
+  await expect(page).toHaveURL(/field.review_type=code&field.review_type=design/);
+  await filters.clear();
+  await expect(page).not.toHaveURL(/field\./);
+  await page.goto(`/ws/${THREAD_WS}/cases?field.review_type=code`);
+  await expect(list.getCaseRowByTitle(`${prefix} code`)).toBeVisible();
+  await expect(list.getCaseRowByTitle(`${prefix} design`)).toHaveCount(0);
 });

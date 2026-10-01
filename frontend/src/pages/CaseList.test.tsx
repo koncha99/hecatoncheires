@@ -35,7 +35,7 @@ interface FieldDef {
   id: string
   name: string
   type: string
-  options?: null
+  options?: { id: string; name: string }[] | null
 }
 
 function fieldConfigMock(workspaceId: string, fields: FieldDef[] = []): MockedResponse {
@@ -1292,5 +1292,38 @@ describe('CaseList status and assignee filters', () => {
 
     expect(screen.queryByTestId('status-filter-button')).not.toBeInTheDocument()
     expect(screen.getByTestId('assignee-filter-button')).toBeInTheDocument()
+  })
+})
+
+
+describe('CaseList field filters', () => {
+  const definitions: FieldDef[] = [{ id: 'category', name: 'Category', type: 'SELECT', options: [{ id: 'it', name: 'IT' }, { id: 'sales', name: 'Sales' }] }]
+  const rows = [
+    { ...caseRow(51, 'IT request', 'OPEN'), fields: [{ fieldId: 'category', value: 'it', display: null }] },
+    { ...caseRow(52, 'Sales request', 'OPEN'), fields: [{ fieldId: 'category', value: 'sales', display: null }] },
+  ]
+
+  it('applies a shared field-filter URL before rendering rows and keeps it when opening a case', async () => {
+    const { probeRef } = renderAt('/ws/risk/cases?field.category=it', rows, definitions)
+    expect(await screen.findByText('IT request')).toBeInTheDocument()
+    expect(screen.queryByText('Sales request')).toBeNull()
+    fireEvent.click(screen.getAllByTestId('case-row-link-51')[0])
+    expect((probeRef.state as { fromFieldFilters: string }).fromFieldFilters).toContain('field.category=it')
+  })
+
+  it('updates the URL, resets page and combines fields with title search', async () => {
+    const { probeRef } = renderAt('/ws/risk/cases?page=3&custom=keep', rows, definitions)
+    await screen.findByText('Sales request')
+    fireEvent.click(screen.getByTestId('case-field-filters-button'))
+    fireEvent.click(screen.getByTestId('case-field-filter-category').querySelector('button')!)
+    fireEvent.click(screen.getByRole('button', { name: 'IT' }))
+    await waitFor(() => expect(screen.queryByText('Sales request')).toBeNull())
+    expect(probeRef.path).toBe('/ws/risk/cases?custom=keep&field.category=it')
+    fireEvent.change(screen.getByTestId('search-filter'), { target: { value: 'Sales' } })
+    expect(screen.queryByText('IT request')).toBeNull()
+    fireEvent.change(screen.getByTestId('search-filter'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('case-field-filters-clear'))
+    expect(await screen.findByText('Sales request')).toBeInTheDocument()
+    expect(probeRef.path).toBe('/ws/risk/cases?custom=keep')
   })
 })
