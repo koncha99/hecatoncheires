@@ -43,7 +43,6 @@ export const en: Messages = {
   filterNoOptions: 'No matching values',
   filterOptionsUnavailable: 'Could not load choices. Selected IDs are still applied.',
   filterCaseFields: 'Case fields',
-  filterCaseFieldsHint: 'Values in one field match any selection; different fields must all match. Other fields use exact values or IDs.',
   filterCaseFieldExact: 'Exact value or ID',
   filterStatus: 'Status',
   filterAssignee: 'Assignee',

@@ -41,7 +41,6 @@ export const msgKeys = {
   filterNoOptions: 'filterNoOptions',
   filterOptionsUnavailable: 'filterOptionsUnavailable',
   filterCaseFields: 'filterCaseFields',
-  filterCaseFieldsHint: 'filterCaseFieldsHint',
   filterCaseFieldExact: 'filterCaseFieldExact',
   filterStatus: 'filterStatus',
   filterAssignee: 'filterAssignee',

@@ -72,7 +72,6 @@ export default function CaseFieldFilters({ fields, cases, filters, onChange, onC
             data-testid="case-field-filters-panel"
             onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false) }}
           >
-            <p className={styles.hint}>{t('filterCaseFieldsHint')}</p>
             {ids.map((id) => {
               const field = fields.find((f) => f.id === id) ?? { id, name: id, type: 'TEXT' }
               return (

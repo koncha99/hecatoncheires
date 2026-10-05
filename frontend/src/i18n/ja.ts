@@ -43,7 +43,6 @@ export const ja: Messages = {
   filterNoOptions: '候補がありません',
   filterOptionsUnavailable: '候補を取得できませんでした。選択済みのIDで絞り込んでいます。',
   filterCaseFields: 'ケースのフィールド',
-  filterCaseFieldsHint: '同じフィールドの選択値はいずれかに一致、異なるフィールドはすべてに一致するケースを表示します。選択式以外は値やIDの完全一致です。',
   filterCaseFieldExact: '値またはID（完全一致）',
   filterStatus: 'ステータス',
   filterAssignee: '担当者',
